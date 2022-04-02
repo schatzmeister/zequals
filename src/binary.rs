@@ -40,6 +40,21 @@ impl Exponent for i128 {
     }
 }
 
+/// Trait for converting a number into its zequalized form.
+trait Zequals {
+    /// Perform the operation.
+    fn zequals(self) -> Self;
+}
+
+impl<T> Zequals for T
+where
+    Zequal: From<T> + Into<T>,
+{
+    fn zequals(self) -> Self {
+        Zequal::from(self).into()
+    }
+}
+
 impl From<u128> for Zequal {
     fn from(value: u128) -> Self {
         if value == 0 {
@@ -158,6 +173,16 @@ mod test {
         assert_eq!(2u128, z.into());
     }
 
+    #[test]
+    fn test_zequals_of_0u128() {
+        assert_eq!(0.zequals(), 0u128);
+    }
+
+    #[test]
+    fn test_zequals_of_0i128() {
+        assert_eq!(0.zequals(), 0i128);
+    }
+
     proptest! {
         #[test]
         // Convert 2**n from u128 to Zequals and back to u128.
@@ -190,6 +215,19 @@ mod test {
         fn test_convert_id_negative_leading_zeros(num: i128) {
             let zeq = i128::from(Zequal::from(num));
             assert_eq!(zeq.abs().leading_zeros(), num.abs().leading_zeros());
+        }
+
+        #[test]
+        // The zero special case is excluded here.
+        fn test_zequals_u128(num in 1..u128::MAX) {
+            let zeq = num.zequals();
+            assert_eq!(zeq.count_ones(), 1);
+
+            // zeq <= num < 2*zeq
+            assert!(zeq <= num);
+            if num.leading_ones() == 0 {
+                assert!(zeq<<1 > num)
+            }
         }
     }
 }
