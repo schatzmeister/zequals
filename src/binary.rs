@@ -35,6 +35,8 @@ impl Exponent for u128 {
 
 impl Exponent for i128 {
     fn exponent(&self) -> i8 {
+        // The maximal exponent is 126, but we have to account for
+        // the sign bit.
         let bits = 127;
         bits - self.abs().leading_zeros() as i8
     }
@@ -64,8 +66,6 @@ impl From<u128> for Zequal {
             }
         } else {
             Self {
-                // If there is no leading zero, we have 2^127,
-                // otherwise, each leading zero halves the number.
                 exponent: value.exponent(),
                 sign: Sign::Pos,
             }
@@ -92,15 +92,11 @@ impl From<i128> for Zequal {
             }
         } else if value > 0 {
             Self {
-                // The sign bit is 0. The maximal number is 2^126,
-                // each further leading zero halves the number.
                 exponent: value.exponent(),
                 sign: Sign::Pos,
             }
         } else {
             Self {
-                // Similar to the `> 0` case but we ignore the sign bit
-                // when counting the leading zeros.
                 exponent: value.exponent(),
                 sign: Sign::Neg,
             }
